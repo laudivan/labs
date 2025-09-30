@@ -1,0 +1,101 @@
+# Vagrant lab for IPtables Introduction HandOn Class
+#
+#
+#
+Vagrant.configure("2") do |config|
+
+  config.vm.define "firewall" do |firewall|
+    firewall.vm.box = "debian/trixie64"
+    firewall.vm.hostname = "firewall.net"
+    firewall.vm.network "public_network"
+    firewall.vm.network "private_network",
+      virtualbox__intnet: "dmz",
+      ip: "192.168.56.2",
+      netmask: 24
+    firewall.vm.network "private_network",
+      virtualbox__intnet: "local",
+      ip: "192.168.57.1",
+      netmask: 24
+    firewall.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "256"
+    end
+    firewall.vm.provision "file", 
+      source: "backports.list",
+      destinaton: "/etc/apt/sources.list.d/backports.list"
+    firewall.vm.provision "file", 
+      source: "fasttrack.list",
+      destinaton: "/etc/apt/sources.list.d/fasttrack.list"
+    firewall.vm.provision "shell", inline: <<-SHELL
+      apt update
+      apt install -y  fasttrack-archive-keyring \
+                      virtualbox-guest-utils \
+                      iptables \
+                      iftop \
+                      iptraf \
+                      iproute2 \
+                      squid squidview \
+                      net-tools
+    SHELL
+  end
+
+  config.vm.define "server" do |server|
+    server.vm.box = "debian/buster64"
+    server.vm.hostname = "www.server.net"
+    server.vm.network "private_network",
+      virtualbox__intnet: "dmz",
+      ip: "192.168.56.3",
+      netmask: 24
+    server.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "512"
+    end
+    server.vm.provision "file", 
+      source: "backports.list",
+      destinaton: "/etc/apt/sources.list.d/backports.list"
+    server.vm.provision "file", 
+      source: "fasttrack.list",
+      destinaton: "/etc/apt/sources.list.d/fasttrack.list"
+    server.vm.provision "shell", inline: <<-SHELL
+      apt update
+      apt install -y  fasttrack-archive-keyring \
+                      nginx \
+                      virtualbox-guest-utils
+      SHELL
+  end
+
+  config.vm.define "client" do |client|
+    client.vm.box = "debian/buster64"
+    client.vm.hostname = "client.net"
+    client.vm.network "private_network",
+      virtualbox__intnet: "local",
+      ip: "192.168.57.10",
+      netmask: 24
+    client.vm.provider "virtualbox" do |vb|
+      vb.gui = true
+      vb.memory = "2048"
+    end
+    client.vm.provision "file", 
+      source: "backports.list",
+      destinaton: "/etc/apt/sources.list.d/backports.list"
+    client.vm.provision "file", 
+      source: "fasttrack.list",
+      destinaton: "/etc/apt/sources.list.d/fasttrack.list"
+    client.vm.provision "shell", inline: <<-SHELL
+      apt update
+      apt install -y  fasttrack-archive-keyring \
+                      virtualbox-guest-utils \
+                      virtualbox-guest-x11 \
+                      net-utils \
+                      xorg \
+                      lightdm \
+                      lxde \
+                      wireshark \
+                      firefox-esr
+    SHELL
+    client.vm.provision "file", 
+      source: "50-autologin.conf",
+      destinaton: "/etc/lightdm/lightdm.conf.d/50-autologin.conf"
+  end
+
+end
