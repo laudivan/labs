@@ -19,7 +19,7 @@ source "qemu" "fedora-base" {
   iso_url      = "${var.FedoraBaseIsoUrl}/${var.FedoraVersion}/Everything/${var.Arch}/iso/Fedora-Everything-netinst-${var.Arch}-${var.FedoraVersion}-${var.IsoRelease}.iso"
   iso_checksum = "file:${var.FedoraBaseIsoUrl}/${var.FedoraVersion}/Everything/${var.Arch}/iso/Fedora-Everything-${var.FedoraVersion}-${var.IsoRelease}-${var.Arch}-CHECKSUM"
 
-  headless         = false
+  headless         = true
 
   vm_name          = "fedora-base-${var.Arch}-${var.FedoraVersion}.qcow2"
   format           = "qcow2"
@@ -56,6 +56,19 @@ source "qemu" "fedora-base" {
 build {
   sources = ["source.qemu.fedora-base"]
 
+  provisioner "file" {
+    source = "./assets/vagrant_id.pub"
+    destination = "/tmp/authorized_keys"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "mkdir -p /home/vagrant/.ssh",
+      "chown vagrant:vagrant -r /home/vagrant/.ssh",
+      "chmod 700 /home/vagrant/.ssh"
+    ]
+  }
+
   post-processors {
     post-processor "manifest" {
       output = "output/manifest.json"
@@ -66,22 +79,19 @@ build {
       }
     }
 
-    post-processor "vagrant" {
-      output = "output/fedora-base-${var.Arch}-${var.FedoraVersion}.box"
-    }
-
     post-processor "artifice" {
       files = ["output/fedora-base-${var.Arch}-${var.FedoraVersion}.box"]
+    }
+
+    post-processor "vagrant" {
+      compression_level = 9
+      keep_input_artifact = true
+      provider_override   = "qemu"
     }
 
     post-processor "checksum" {
       checksum_types = [ "md5", "sha512" ]
       keep_input_artifact = true
     }
-  }
-
-  provisioner "file" {
-    source = "./assets/vagrant_id.pub"
-    destination = "/home/vagrant/.ssh/authorized_keys"
   }
 }
