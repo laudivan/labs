@@ -86,7 +86,7 @@ build {
     post-processor "vagrant" {
       compression_level = 9
       keep_input_artifact = true
-      provider_override   = "qemu"
+      #provider_override   = "qemu"
     }
 
     post-processor "checksum" {
