@@ -19,7 +19,7 @@ source "qemu" "fedora-base" {
   iso_url      = "${var.FedoraBaseIsoUrl}/${var.FedoraVersion}/Everything/${var.Arch}/iso/Fedora-Everything-netinst-${var.Arch}-${var.FedoraVersion}-${var.IsoRelease}.iso"
   iso_checksum = "file:${var.FedoraBaseIsoUrl}/${var.FedoraVersion}/Everything/${var.Arch}/iso/Fedora-Everything-${var.FedoraVersion}-${var.IsoRelease}-${var.Arch}-CHECKSUM"
 
-  headless = false
+  headless         = false
 
   vm_name          = "fedora-base-${var.Arch}-${var.FedoraVersion}.qcow2"
   format           = "qcow2"
@@ -56,17 +56,28 @@ source "qemu" "fedora-base" {
 build {
   sources = ["source.qemu.fedora-base"]
 
-  post-processor "manifest" {
-    output = "manifest.json"
-    strip_path = true
-    custom_data = {
-      author = "Laudivan Almeida"
-      email = "lau@hanuky.space"
+  post-processors {
+    post-processor "manifest" {
+      output = "output/manifest.json"
+      strip_path = true
+      custom_data = {
+        author = "Laudivan Almeida"
+        email = "lau@hanuky.space"
+      }
     }
-  }
 
-  post-processor "vagrant" {
-    output = "fedora-base-${var.Arch}-${var.FedoraVersion}.box"
+    post-processor "vagrant" {
+      output = "output/fedora-base-${var.Arch}-${var.FedoraVersion}.box"
+    }
+
+    post-processor "artifice" {
+      files = ["output/fedora-base-${var.Arch}-${var.FedoraVersion}.box"]
+    }
+
+    post-processor "checksum" {
+      checksum_types = [ "md5", "sha512" ]
+      keep_input_artifact = true
+    }
   }
 
   provisioner "file" {
