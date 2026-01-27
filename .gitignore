@@ -1,0 +1,13 @@
+*.iso
+*.qcow2
+*.box
+*.iso
+**/artifacts
+**/packer_cache
+**/iso
+.DS_Store
+build.pwd
+build.pwi
+build.hwm
+.terraform*
+*.tfstate*
