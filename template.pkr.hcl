@@ -1,0 +1,76 @@
+packer {
+  required_plugins {
+    qemu = {
+      version = "~> 1"
+      source  = "github.com/hashicorp/qemu"
+    }
+    ansible = {
+      version = ">= 1.1.2"
+      source  = "github.com/hashicorp/ansible"
+    }
+    vagrant = {
+      version = "~> 1"
+      source  = "github.com/hashicorp/vagrant"
+    }
+  }
+}
+
+source "qemu" "fedora-base" {
+  iso_url      = "${var.FedoraBaseIsoUrl}/${var.FedoraVersion}/Everything/${var.Arch}/iso/Fedora-Everything-netinst-${var.Arch}-${var.FedoraVersion}-${var.IsoRelease}.iso"
+  iso_checksum = "file:${var.FedoraBaseIsoUrl}/${var.FedoraVersion}/Everything/${var.Arch}/iso/Fedora-Everything-${var.FedoraVersion}-${var.IsoRelease}-${var.Arch}-CHECKSUM"
+
+  headless = false
+
+  vm_name          = "fedora-base-${var.Arch}-${var.FedoraVersion}.qcow2"
+  format           = "qcow2"
+  disk_interface   = "virtio"
+  disk_size        = "5G"
+  output_directory = "output"
+
+  machine_type     = "q35"
+  accelerator      = "kvm"
+  cpus             = 1
+  memory           = 2048
+
+  http_directory = "http"
+
+  ssh_username   = "vagrant"
+  ssh_password   = "vagrant"
+  ssh_timeout    = "30m"
+  ssh_private_key_file = "./assets/vagrant_id"
+
+  boot_wait = "5s"
+  boot_command = [
+    "<wait>c<wait>",
+    "setparams 'Install Fedora ${var.FedoraVersion}'<enter>",
+    "linux /images/pxeboot/vmlinuz", 
+    " inst.stage2=hd:LABEL=Fedora-E-dvd-${var.Arch}-${var.FedoraVersion}",
+    " inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/fedora-base.ks.cfg",
+    " quiet",
+    "<enter>",
+    "initrd /images/pxeboot/initrd.img<enter>",
+    "boot<enter><wait>"
+  ]
+}
+
+build {
+  sources = ["source.qemu.fedora-base"]
+
+  post-processor "manifest" {
+    output = "manifest.json"
+    strip_path = true
+    custom_data = {
+      author = "Laudivan Almeida"
+      email = "lau@hanuky.space"
+    }
+  }
+
+  post-processor "vagrant" {
+    output = "fedora-base-${var.Arch}-${var.FedoraVersion}.box"
+  }
+
+  provisioner "file" {
+    source = "./assets/vagrant_id.pub"
+    destination = "/home/vagrant/.ssh/authorized_keys"
+  }
+}
