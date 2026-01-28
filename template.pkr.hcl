@@ -36,7 +36,7 @@ source "qemu" "fedora-base" {
 
   ssh_username   = "vagrant"
   ssh_password   = "vagrant"
-  ssh_timeout    = "30m"
+  ssh_timeout    = "20m"
   ssh_private_key_file = "./assets/vagrant_id"
 
   boot_wait = "5s"
@@ -59,6 +59,10 @@ build {
   sources = ["source.qemu.fedora-base"]
 
   post-processors {
+    post-processor "shell-local" {
+      inline = [ "mkdir -p artifacts/fedora-base" ]
+    }
+
     post-processor "manifest" {
       output = "artifacts/fedora-base/manifest.json"
       strip_path = true
