@@ -11,6 +11,5 @@ chpasswd:
     vagrant:vagrant
 packages:
   - qemu-guest-agent
-
 runcmd:
   - echo vagrant | passwd --stdin vagrant
