@@ -12,3 +12,4 @@ build.pwi
 build.hwm
 .terraform*
 *.tfstate*
+.vagrant/**
