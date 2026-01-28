@@ -2,7 +2,8 @@
 *.qcow2
 *.box
 *.iso
-**/artifacts
+**/output/*
+**/artifacts/*
 **/packer_cache
 **/iso
 .DS_Store
