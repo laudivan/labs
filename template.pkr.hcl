@@ -46,6 +46,7 @@ source "qemu" "fedora-base" {
     "linux /images/pxeboot/vmlinuz", 
     " inst.stage2=hd:LABEL=Fedora-E-dvd-${var.Arch}-${var.FedoraVersion}",
     " inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/fedora-base.ks.cfg",
+    " inst.notmux inst.noshell inst.noninteractive inst.text",
     " PACKER_HTTP_SSHPUBKEY=\"http://{{ .HTTPIP }}:{{ .HTTPPort }}/vagrant_id.pub\"",
     " quiet",
     "<enter>",
