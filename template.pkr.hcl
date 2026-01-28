@@ -32,7 +32,7 @@ source "qemu" "fedora-base" {
   cpus             = 1
   memory           = 2048
 
-  http_directory = "http"
+  http_directory = "assets"
 
   ssh_username   = "vagrant"
   ssh_password   = "vagrant"
@@ -46,6 +46,7 @@ source "qemu" "fedora-base" {
     "linux /images/pxeboot/vmlinuz", 
     " inst.stage2=hd:LABEL=Fedora-E-dvd-${var.Arch}-${var.FedoraVersion}",
     " inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/fedora-base.ks.cfg",
+    " PACKER_HTTP_SSHPUBKEY=\"http://{{ .HTTPIP }}:{{ .HTTPPort }}/vagrant_id.pub\"",
     " quiet",
     "<enter>",
     "initrd /images/pxeboot/initrd.img<enter>",
@@ -56,22 +57,9 @@ source "qemu" "fedora-base" {
 build {
   sources = ["source.qemu.fedora-base"]
 
-  provisioner "file" {
-    source = "./assets/vagrant_id.pub"
-    destination = "/tmp/authorized_keys"
-  }
-
-  provisioner "shell" {
-    inline = [
-      "mkdir -p /home/vagrant/.ssh",
-      "chown vagrant:vagrant -r /home/vagrant/.ssh",
-      "chmod 700 /home/vagrant/.ssh"
-    ]
-  }
-
   post-processors {
     post-processor "manifest" {
-      output = "output/manifest.json"
+      output = "artifacts/fedora-base/manifest.json"
       strip_path = true
       custom_data = {
         author = "Laudivan Almeida"
@@ -80,7 +68,7 @@ build {
     }
 
     post-processor "artifice" {
-      files = ["output/fedora-base-${var.Arch}-${var.FedoraVersion}.box"]
+      files = ["artifacts/fedora-base/fedora-base-${var.Arch}-${var.FedoraVersion}.box"]
     }
 
     post-processor "vagrant" {
