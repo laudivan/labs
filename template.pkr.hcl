@@ -74,12 +74,13 @@ build {
 
     post-processor "artifice" {
       files = ["artifacts/fedora-base/fedora-base-${var.Arch}-${var.FedoraVersion}.box"]
+      keep_input_artifact = true
     }
 
     post-processor "vagrant" {
       compression_level = 9
       keep_input_artifact = true
-      #provider_override   = "qemu"
+      output = "artifacts/fedora-base/fedora-base-${var.Arch}-${var.FedoraVersion}.box"
     }
 
     post-processor "checksum" {
