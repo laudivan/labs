@@ -1,0 +1,16 @@
+## template: jinja
+#cloud-config
+users:
+  - name: vagrant
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDFFYNYYwfq1efJkKqh0Vb+J6wNwNe0Kx6wFhaWkgIL8 vagrant@network-labs
+chpasswd:
+  list: |
+    root:vagrant
+    vagrant:vagrant
+packages:
+  - qemu-guest-agent
+  - fedora-productimg-server
+runcmd:
+  - echo vagrant | passwd --stdin vagrant

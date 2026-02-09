@@ -1,8 +1,8 @@
 packer {
   required_plugins {
-    virtualbox = {
+    qemu = {
       version = "~> 1"
-      source  = "github.com/hashicorp/virtualbox"
+      source  = "github.com/hashicorp/qemu"
     }
     vagrant = {
       version = "~> 1"
@@ -15,36 +15,34 @@ variable "vm" {
   type    = object({
     name = string
     version = string
-    iso_release = string
-    iso_base_url = string
+    image_release = string
+    image_base_url = string
   })
+  default = {
+    name = "fedora-server"
+    version = "43"
+    image_release = "1.6"
+    image_base_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/43/Server"
+  }
 }
 
-source "virtualbox-iso" "fedora-server-arm64" {
-  iso_url      = "${var.vm.iso_base_url}/${var.vm.version}/Server/aarch64/iso/Fedora-Server-netinst-aarch64-${var.vm.version}-${var.vm.iso_release}.iso"
-  iso_checksum = "file:${var.vm.iso_base_url}/${var.vm.version}/Server/aarch64/iso/Fedora-Server-${var.vm.version}-${var.vm.iso_release}-aarch64-CHECKSUM"
+source "qemu" "fedora-server-aarch64" {
+  iso_url      = "${var.vm.image_base_url}/aarch64/iso/Fedora-Server-netinst-aarch64-${var.vm.version}-${var.vm.image_release}.iso"
+  iso_checksum = "file:${var.vm.image_base_url}/aarch64/iso/Fedora-Server-${var.vm.version}-${var.vm.image_release}-aarch64-CHECKSUM"
 
   headless         = false
 
-  guest_os_type    = "Fedora_arm64"
-  disk_size        = 15360
-
-  firmware = "efi"
-  # firmware = "bios"
-  iso_interface = "sata"
-  hard_drive_interface = "virtio"
-
-  guest_additions_mode = "disable"
-
+  vm_name          = "fedora-server-aarch64-${var.vm.version}.qcow2"
+  format           = "qcow2"
+  # disk_interface   = "virtio"
+  # disk_size        = "1G"
   output_directory = "output"
   http_directory = "packer/fedora-server"
 
-  cpus             = 2
+  # machine_type     = "q35"
+  # accelerator      = "kvm"
+  cpus             = 1
   memory           = 2048
-  nic_type         = "virtio"
-  gfx_controller   = "vboxsvga"
-  gfx_accelerate_3d = false
-  gfx_vram_size = 16
 
   ssh_username   = "vagrant"
   ssh_password   = "vagrant"
@@ -69,16 +67,15 @@ source "virtualbox-iso" "fedora-server-arm64" {
     "boot<enter><wait>"
   ]
 
-  acpi_shutdown = true
   shutdown_command = "systemctl poweroff"
 }
 
 build {
 
-  sources = ["source.virtualbox-iso.fedora-server-arm64"]
+  sources = ["source.qemu.fedora-server-aarch64"]
 
-  source "virtualbox-iso.fedora-server-arm64" {
-    name = "fedora-server-arm64"
+  source "qemu.fedora-server-aarch64" {
+    name = "fedora-server"
   }
 
   provisioner "shell-local" {
@@ -88,7 +85,7 @@ build {
   }
 
   post-processor "manifest" {
-    output = "output/${source.name}/manifest.json"
+    output = "output/${source.name}-aarch64/manifest.json"
     strip_path = true
     custom_data = {
       author = "Laudivan Almeida"
@@ -98,12 +95,12 @@ build {
 
   post-processor "vagrant" {
     compression_level = 9
-    output = "output/${source.name}/vagrant.box"
+    output = "output/${source.name}-aarch64/vagrant.box"
   }
 
   post-processor "checksum" {
     checksum_types = [ "sha512" ]
     keep_input_artifact = true
-    output = "output/${source.name}/vagrant.{{ .ChecksumType }}"
+    output = "output/${source.name}-aarch64/vagrant.{{ .ChecksumType }}"
   }
 }
