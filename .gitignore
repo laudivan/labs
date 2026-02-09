@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 *.iso
 *.qcow2
 *.box
@@ -13,3 +14,18 @@ build.hwm
 .terraform*
 *.tfstate*
 .vagrant/**
+=======
+**/*.zip
+**/*.rar
+
+**/*.exe
+
+### Vagrant ###
+# General
+**/.vagrant/
+
+**/*.log
+
+### Vagrant Patch ###
+**/*.box
+>>>>>>> 52e63dbb87a420fe1fbcb9e1c55e61637d8b3e2f

@@ -1,0 +1,35 @@
+Vagrant.configure("2") do |linuxLab|
+  linuxLab.vm.define "Debian12" do |db|
+    db.vm.box = "debian/bookworm64"
+    db.ssh do |ssh|
+      ssh.port = 2201
+      ssh.keys_only = false
+    end
+    db.vm.hostname = "debian-bw"
+#    db.disksize.size = "5GB"
+    db.vm.provider "virtualbox" do |v|
+      v.name = "debian-bw"
+      v.check_guest_additions = true
+      v.memory = 512
+      v.cpus = 1
+      v.gui = false
+    end
+  end
+
+  linuxLab.vm.define "RedHat8" do |db|
+    db.vm.box = "generic/rhel8"
+    db.ssh do |ssh|
+      ssh.port = 2202
+      ssh.keys_only = false
+    end
+    db.vm.hostname = "rhel8"
+#    db.disksize.size = "5GB"
+    db.vm.provider "virtualbox" do |v|
+      v.name = "rhel8"
+      v.check_guest_additions = true
+      v.memory = 512
+      v.cpus = 1
+      v.gui = false
+    end
+  end
+end

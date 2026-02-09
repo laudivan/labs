@@ -1,0 +1,45 @@
+Vagrant.configure("2") do |config|
+  config.vm.define "WSO2IS-5.8.0-Win" do |clover|
+    clover.vm.box = "gusztavvargadr/iis"
+    clover.vm.hostname = "wsois-server"
+    clover.vm.network "forwarded_port", id: 'WSO2IS', guest: 9443, host: 9443, protocol: "tcp"
+    config.vm.network "forwarded_port", id: 'ssh', guest: 22, host: 22122, auto_correct: true
+    
+    if Vagrant.has_plugin?("vagrant-vbguest") then
+      config.vbguest.auto_update = true
+    end
+
+    clover.vm.provider "virtualbox" do |vm|
+      vm.name = "VagrantWSO2IS5.8.0"
+      vm.memory = "8192"
+      vm.cpus = "4"
+      vm.gui = false
+    end
+
+    clover.vm.provision "file", source: "installation/jdk-8u351-windows-x64.exe", destination: 'C:\\Users\\Vagrant\\Downloads\\jdk-8u351-windows-x64.exe'
+    clover.vm.provision "file", source: "installation/wso2is-5.8.0-rc3.zip", destination: 'C:\\Users\\Vagrant\\Downloads\\wso2is-5.8.0-rc3.zip'
+    clover.vm.provision "file", source: "installation/yajsw-stable-11.11.zip", destination: 'C:\\Users\\Vagrant\\Downloads\\yajsw-stable-11.11.zip'
+    
+    clover.vm.provision :shell, 
+      run: "Once", 
+      name: "Installing WSO2IS",
+      privileged: true,
+      path: 'installation\\install.ps1'
+  end
+
+  config.vm.post_up_message = '
+
+
+
+
+   #################################################
+          Environment of WSO2IS tests is up
+   #################################################
+
+     - Use https://localhost:9443/carbon with admin
+       user and admin password to modify WSO2IS
+       behavior.
+
+   #################################################
+  '
+end
