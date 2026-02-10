@@ -1,0 +1,57 @@
+Vagrant.configure("2") do |config|
+  
+  # 1. SERVIDOR WEB (DMZ Interna)
+  config.vm.define "webserver" do |web|
+    web.vm.box = "debian/bookworm64"
+    web.vm.network "private_network", ip: "10.0.1.10", virtualbox__intnet: "serv-net"
+    web.vm.provision "shell", inline: "apt-get update && apt-get install -y apache2"
+  end
+
+  # 2. ROTEADOR + PROXY (O Cérebro)
+  config.vm.define "router" do |router|
+    router.vm.box = "debian/bookworm64"
+    # Interface para o cliente e webserver
+    router.vm.network "private_network", ip: "10.0.1.1", virtualbox__intnet: "serv-net"
+    
+    router.vm.provision "shell", inline: <<-SHELL
+      apt-get update && apt-get install -y squid iptables-persistent
+      
+      # Habilitar Roteamento no Kernel (IP Forwarding)
+      sysctl -w net.ipv4.ip_forward=1
+      sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+      
+      # Configuração básica de NAT para a rede interna sair pela interface NAT do Vagrant
+      iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+      
+      # Configuração mínima do Squid para aceitar a rede local
+      echo "acl localnet src 10.0.1.0/24" >> /etc/squid/squid.conf
+      echo "http_access allow localnet" >> /etc/squid/squid.conf
+      systemctl restart squid
+    SHELL
+  end
+
+  # 3. CLIENTE FEDORA (Ambiente Gráfico)
+  config.vm.define "client" do |client|
+    client.vm.box = "fedora/39-cloud-base" # Usaremos o cloud e instalaremos o group "Workstation"
+    client.vm.network "private_network", ip: "10.0.1.20", virtualbox__intnet: "serv-net"
+    
+    client.vm.provider "virtualbox" do |vb|
+      vb.gui = true
+      vb.memory = "2048"
+      vb.cpus = 2
+    end
+
+    client.vm.provision "shell", inline: <<-SHELL
+      # Instalação do ambiente gráfico e firefox (Isso demora um pouco)
+      dnf groupinstall -y "Fedora Workstation"
+      dnf install -y firefox
+      
+      # Configura o Gateway padrão para passar pelo Router
+      ip route del default
+      ip route add default via 10.0.1.1
+      
+      # Força o sistema a iniciar no modo gráfico
+      systemctl set-default graphical.target
+    SHELL
+  end
+end
