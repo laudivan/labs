@@ -1,0 +1,21 @@
+---
+- name: Configuração de Infraestrutura
+  hosts: all
+  become: yes
+  tasks:
+    - name: Garantir Apache no Webserver
+      apt:
+        name: apache2
+        state: present
+      when: inventory_hostname == 'webserver'
+
+    - name: Configurar Squid no Router
+      block:
+        - apt:
+            name: squid
+            state: present
+        - lineinfile:
+            path: /etc/squid/squid.conf
+            line: "http_port 3128 intercept" # Modo transparente para impressionar
+            state: present
+      when: inventory_hostname == 'router'
